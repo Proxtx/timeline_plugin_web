@@ -1,7 +1,7 @@
 function reportHref (){
   browser.runtime.sendMessage({
     type: "reportVisit",
-    data: {client: "Firefox Desktop", website: window.location.href}
+    data: {client: CONFIG.client, website: window.location.href}
   })
 }
 

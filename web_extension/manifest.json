@@ -9,10 +9,16 @@
     "48": "icons/icon_48.png"
   },
 
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "timeline_web@proxtx.de"
+    }
+  },
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["report.js"]
+      "js": ["data.js", "report.js"]
     }
   ],
 
@@ -20,6 +26,6 @@
     "http://localhost/*"
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js", "data.js"]
   }
 }

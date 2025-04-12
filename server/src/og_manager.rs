@@ -41,16 +41,6 @@ impl OGManager {
         create_dir_all(&path).await?;
         if let Some(image) = &og_data.image {
             let bytes = create_get_request(image.clone()).await?.bytes().await?;
-            let mut image_path = path.clone();
-            image_path.push(
-                image
-                    .path_segments()
-                    .into_iter()
-                    .last()
-                    .unwrap()
-                    .next()
-                    .unwrap_or("image.png"),
-            );
             OpenOptions::new()
                 .create_new(true)
                 .write(true)

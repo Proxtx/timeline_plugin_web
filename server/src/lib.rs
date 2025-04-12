@@ -3,7 +3,7 @@
 use std::{path::PathBuf, sync::Arc};
 
 use og_manager::OGManager;
-use rocket::{fs::NamedFile, futures::StreamExt, post, routes, serde::json::Json, State};
+use rocket::{fs::NamedFile, futures::StreamExt, get, post, routes, serde::json::Json, State};
 use serde::{Deserialize, Serialize};
 use server_api::{
     db::{Database, Event},
@@ -105,12 +105,15 @@ impl PluginTrait for Plugin {
                     }
                 };
                 result.push(CompressedEvent {
-                    title: og_data
-                        .title
-                        .clone()
-                        .unwrap_or(res.event.website.to_string()),
+                    title: og_data.title.clone().unwrap_or(
+                        res.event
+                            .website
+                            .host_str()
+                            .unwrap_or("Website Visit")
+                            .to_string(),
+                    ),
                     time: res.timing,
-                    data: serde_json::to_value(og_data).unwrap(),
+                    data: serde_json::to_value((og_data, res.event)).unwrap(),
                 });
             }
 
@@ -129,7 +132,7 @@ impl PluginTrait for Plugin {
     where
         Self: Sized,
     {
-        routes![register_visit]
+        routes![register_visit, app_icon]
     }
 }
 
@@ -154,18 +157,25 @@ async fn register_visit(
             server_api::external::types::available_plugins::AvailablePlugins::timeline_plugin_web,
         event: request.0,
     }).await {
-        println!("Website visit: {}", e);
         return Err(format!("Unable to register website visit to database: {}", e));
     }
     Ok(())
 }
 
-#[get("/image/type/<url>")]
-pub async fn app_icon(url: &str, og_manager: &State<OGManager>) -> Option<NamedFile> {
+#[get("/image/<image_type>/<url>")]
+pub async fn app_icon(
+    image_type: &str,
+    url: &str,
+    og_manager: &State<Arc<OGManager>>,
+) -> Option<NamedFile> {
     let url = match Url::parse(url) {
         Ok(v) => v,
         Err(_e) => return None,
     };
-    let (_, _, _, _) = og_manager.get_paths(&url);
-    NamedFile::open(path).await.ok()
+    let (_, _, _, favicon_path, image_path) = og_manager.get_paths(&url);
+    match image_type {
+        "og_image" => NamedFile::open(image_path).await.ok(),
+        "favicon" => NamedFile::open(favicon_path).await.ok(),
+        _ => None,
+    }
 }
