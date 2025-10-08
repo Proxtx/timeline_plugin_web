@@ -1,5 +1,3 @@
-#![feature(let_chains)]
-
 use std::{path::PathBuf, sync::Arc};
 
 use og_manager::OGManager;
